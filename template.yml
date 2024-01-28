@@ -1,19 +1,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: EventBridge Pipe that connects DynamoDB Streams to Lambda with Enrichment
+Description: DynamoDB order-table creation, EventBridge Pipe that streams to Step functions
 
 Parameters:
-  Stage:
+  Environment:
     Type: String
     Default: test
+    Description: (Required) Enter test, prod. Default is test.
+    AllowedValues:
+        - test
+        - prod
 
 Resources:
   # DynamoDB Table Creation with Stream Enabled
-  DynamoDBSampleTable:
+  OrderTable:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName:
-        Fn::Sub: order-table-${Stage}
+        Fn::Sub: OrderTable-${Environment}
       AttributeDefinitions:
         - AttributeName: email
           AttributeType: S
@@ -26,37 +30,40 @@ Resources:
           KeyType: RANGE
       BillingMode: PAY_PER_REQUEST
       StreamSpecification:
-        StreamViewType: NEW_IMAGE
+        StreamViewType: NEW_AND_OLD_IMAGES
       Tags:
-        org: cedarmeadowmeats
-        env: !Ref Stage
+        - Key: org
+          Value: cedarmeadowmeats
+        - Key: env
+          Value: !Ref Environment
 
   # Create Customer Lambda Function
-  Target:
+  SendEmailFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub 'send-email-${Environment}'
       Handler: com.cedarmeadowmeats.orderservice.StreamLambdaHandler::handleRequest
       Runtime: java21
       #      SnapStart:
       #        ApplyOn: PublishedVersions
-      CodeUri: .
+      CodeUri: send-email
       MemorySize: 1512
       Policies:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
-            TableName: !Sub 'order-table-${Stage}'
+            TableName: !Sub 'OrderTable-${Environment}'
       Timeout: 60
       Environment:
         Variables:
           org: cedarmeadowmeats
-          eng: !Ref Stage
-          SPRING_PROFILES_ACTIVE: !Ref Stage
-          JAVA_TOOL_OPTIONS: !Sub '-Dspring.profiles.active=${Stage}'
+          eng: !Ref Environment
+          SPRING_PROFILES_ACTIVE: !Ref Environment
+          JAVA_TOOL_OPTIONS: !Sub '-Dspring.profiles.active=${Environment}'
           MAIN_CLASS: com.cedarmeadowmeats.orderservice.OrderServiceApplication
-          TABLE_NAME: !Sub 'order-table-${Stage}'
+          TABLE_NAME: !Sub 'OrderTable-${Environment}'
       Tags:
         org: cedarmeadowmeats
-        env: !Ref Stage
+        env: !Ref Environment
 
   # Enrichment log group
   EnrichmentLogGroup:
@@ -64,30 +71,33 @@ Resources:
     Properties:
       LogGroupName: !Join ['/', ['stepfunctions', StateMachine]]
 
-  # Enrichment with Step Functions
-  EnrichmentStateMachine:
+  # OrderWorkflowStateMachine Step Functions
+  OrderWorkflowStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
       Type: STANDARD
-      DefinitionUri: workflow/stepfunction.asl.json
-      Role: !GetAtt EnrichmentStateMachineRole.Arn
+      Name: OrderWorkflowStateMachine
+      DefinitionUri: stepfunction.asl.json
+      Role: !GetAtt OrderWorkflowStateMachineRole.Arn
       Logging:
         Destinations:
           - CloudWatchLogsLogGroup:
               LogGroupArn: !GetAtt EnrichmentLogGroup.Arn
         IncludeExecutionData: true
         Level: 'ALL'
-        Tags:
-          org: cedarmeadowmeats
-          env: !Ref Stage
+      Tags:
+        org: cedarmeadowmeats
+        env: !Ref Environment
 
   #Execution Role for StepFunctions
-  EnrichmentStateMachineRole:
+  OrderWorkflowStateMachineRole:
     Type: AWS::IAM::Role
     Properties:
       Tags:
-        org: cedarmeadowmeats
-        env: !Ref Stage
+        - Key: org
+          Value: cedarmeadowmeats
+        - Key: env
+          Value: !Ref Environment
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -119,8 +129,10 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       Tags:
-        org: cedarmeadowmeats
-        env: !Ref Stage
+        - Key: org
+          Value: cedarmeadowmeats
+        - Key: env
+          Value: !Ref Environment
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -141,7 +153,7 @@ Resources:
                   - "dynamodb:GetRecords"
                   - "dynamodb:GetShardIterator"
                   - "dynamodb:ListStreams"
-                Resource: !GetAtt DynamoDBSampleTable.StreamArn
+                Resource: !GetAtt OrderTable.StreamArn
         - PolicyName: TargetPolicy
           PolicyDocument:
             Version: 2012-10-17
@@ -149,7 +161,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'lambda:InvokeFunction'
-                Resource: !GetAtt Target.Arn
+                Resource: !GetAtt SendEmailFunction.Arn
         - PolicyName: EnrichmentPolicy
           PolicyDocument:
             Version: 2012-10-17
@@ -158,26 +170,26 @@ Resources:
                 Action:
                   - 'states:StartExecution'
                   - 'states:StartSyncExecution'
-                Resource: !GetAtt EnrichmentStateMachine.Arn
+                Resource: !GetAtt OrderWorkflowStateMachine.Arn
 
   Pipe:
     Type: AWS::Pipes::Pipe
     Properties:
       Tags:
         org: cedarmeadowmeats
-        env: !Ref Stage
-      Name: ddb-to-lambda-enrichment
+        env: !Ref Environment
+      Name: !Sub 'order-workflow-pipe-${Environment}'
       Description: "Pipe to connect DynamoDB Stream to AWS Lambda with filtering and enrichment"
       RoleArn: !GetAtt PipeRole.Arn
-      Source: !GetAtt DynamoDBSampleTable.StreamArn
+      Source: !GetAtt OrderTable.StreamArn
       SourceParameters:
         FilterCriteria:
           Filters:
-            - Pattern: '{ "eventName": ["INSERT"], "dynamodb": { "NewImage": { "messageId": { "S": [{ "exists": true }] }, "PK": { "S": [{ "prefix": "Message#" }] }, "SK": { "S": [{ "prefix": "Channel#" }] } } } }'
+            - Pattern: '{ "eventName": ["INSERT"], "dynamodb": { "NewImage": { "messageId": { "S": [{ "exists": true }] }, "email": { "S": [{ "exists": true }] }, "LastUpdatedDate": { "S": [{ "exists": true }] } } } }'
         DynamoDBStreamParameters:
           StartingPosition: LATEST
           BatchSize: 1
-      Enrichment: !GetAtt EnrichmentStateMachine.Arn
-      EnrichmentParameters:
-        InputTemplate: '{ "PK": <$.dynamodb.NewImage.PK.S>, "SK": <$.dynamodb.NewImage.SK.S> }'
-      Target: !GetAtt Target.Arn
+      Target: !Ref OrderWorkflowStateMachine
+      TargetParameters:
+        StepFunctionStateMachineParameters:
+          InvocationType: FIRE_AND_FORGET
