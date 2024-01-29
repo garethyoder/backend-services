@@ -37,21 +37,20 @@ Resources:
         - Key: env
           Value: !Ref Environment
 
-  # Create Customer Lambda Function
-  SendEmailFunction:
+  # Send Email Alert Function
+  SendEmailAlertFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub 'send-email-${Environment}'
-      Handler: com.cedarmeadowmeats.orderservice.StreamLambdaHandler::handleRequest
+      FunctionName: !Sub 'send-email-alert-${Environment}'
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker
       Runtime: java21
       #      SnapStart:
       #        ApplyOn: PublishedVersions
-      CodeUri: send-email
+      CodeUri: send-email-alert
       MemorySize: 1512
       Policies:
         - AWSLambdaBasicExecutionRole
-        - DynamoDBCrudPolicy:
-            TableName: !Sub 'OrderTable-${Environment}'
+        - SESCrudPolicy
       Timeout: 60
       Environment:
         Variables:
@@ -59,8 +58,31 @@ Resources:
           eng: !Ref Environment
           SPRING_PROFILES_ACTIVE: !Ref Environment
           JAVA_TOOL_OPTIONS: !Sub '-Dspring.profiles.active=${Environment}'
-          MAIN_CLASS: com.cedarmeadowmeats.orderservice.OrderServiceApplication
-          TABLE_NAME: !Sub 'OrderTable-${Environment}'
+      Tags:
+        org: cedarmeadowmeats
+        env: !Ref Environment
+
+  # Send Email Confirmation Function
+  SendEmailConfirmationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'send-email-confirmation-${Environment}'
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker
+      Runtime: java21
+      #      SnapStart:
+      #        ApplyOn: PublishedVersions
+      CodeUri: send-email-confirmation
+      MemorySize: 1512
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - SESCrudPolicy
+      Timeout: 60
+      Environment:
+        Variables:
+          org: cedarmeadowmeats
+          eng: !Ref Environment
+          SPRING_PROFILES_ACTIVE: !Ref Environment
+          JAVA_TOOL_OPTIONS: !Sub '-Dspring.profiles.active=${Environment}'
       Tags:
         org: cedarmeadowmeats
         env: !Ref Environment
@@ -161,7 +183,9 @@ Resources:
               - Effect: Allow
                 Action:
                   - 'lambda:InvokeFunction'
-                Resource: !GetAtt SendEmailFunction.Arn
+                Resource:
+                  - !GetAtt SendEmailAlertFunction.Arn
+                  - !GetAtt SendEmailConfirmationFunction.Arn
         - PolicyName: EnrichmentPolicy
           PolicyDocument:
             Version: 2012-10-17
@@ -185,7 +209,7 @@ Resources:
       SourceParameters:
         FilterCriteria:
           Filters:
-            - Pattern: '{ "eventName": ["INSERT"], "dynamodb": { "NewImage": { "messageId": { "S": [{ "exists": true }] }, "email": { "S": [{ "exists": true }] }, "LastUpdatedDate": { "S": [{ "exists": true }] } } } }'
+            - Pattern: '{ "eventName": ["INSERT"], "dynamodb": { "NewImage": "email": { "S": [{ "exists": true }] }, "lastUpdatedDate": { "S": [{ "exists": true }] } } } }'
         DynamoDBStreamParameters:
           StartingPosition: LATEST
           BatchSize: 1

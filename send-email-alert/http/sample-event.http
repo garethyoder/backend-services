@@ -1,0 +1,66 @@
+### Generic Form Submission
+POST http://localhost:8080/sendEmailAlert
+Content-Type: application/json
+
+[
+  {
+    "eventID": "ec1805c55c0e3954e1512f1e00473b16",
+    "eventName": "INSERT",
+    "eventVersion": "1.1",
+    "eventSource": "aws:dynamodb",
+    "awsRegion": "us-east-1",
+    "dynamodb": {
+      "ApproximateCreationDateTime": 1706496528,
+      "Keys": {
+        "lastUpdatedDate": {
+          "S": "2024-01-29T02:48:48.856083087Z[UTC]"
+        },
+        "email": {
+          "S": "garethyoder@yahoo.com"
+        }
+      },
+      "NewImage": {
+        "organizationId": {
+          "S": "CEDAR_MEADOW_MEATS"
+        },
+        "lastUpdatedDate": {
+          "S": "2024-01-29T02:48:48.856083087Z[UTC]"
+        },
+        "comments": {
+          "S": "This is a test comment"
+        },
+        "createdDate": {
+          "S": "2024-01-29T02:48:48.856062450Z[UTC]"
+        },
+        "form": {
+          "S": "CONTACT_FORM"
+        },
+        "selection": {
+          "S": "WHOLE_STEER"
+        },
+        "phone": {
+          "S": "717-368-2610"
+        },
+        "name": {
+          "S": "Gareth Yoder"
+        },
+        "version": {
+          "N": "0"
+        },
+        "email": {
+          "S": "garethyoder@yahoo.com"
+        }
+      },
+      "SequenceNumber": "4559300000000035553547443",
+      "SizeBytes": 337,
+      "StreamViewType": "NEW_AND_OLD_IMAGES"
+    },
+    "eventSourceARN": "arn:aws:dynamodb:us-east-1:295995521946:table/OrderTable-test/stream/2024-01-28T01:13:25.433"
+  }
+]
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}

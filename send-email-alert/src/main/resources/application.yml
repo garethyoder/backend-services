@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: send-email-alert
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  main:
+    web-application-type: servlet
