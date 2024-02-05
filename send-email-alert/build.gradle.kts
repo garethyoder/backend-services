@@ -21,6 +21,8 @@ extra["awsLambdaJavaEvents"] = "3.11.4"
 extra["awsLambdaJavaSerialization"] = "1.1.5"
 
 dependencies {
+    implementation(platform("software.amazon.awssdk:bom:2.23.7"))
+    implementation("software.amazon.awssdk:sesv2")
     developmentOnly("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.cloud:spring-cloud-starter-function-web")
     implementation("org.springframework.cloud:spring-cloud-function-adapter-aws")
@@ -29,6 +31,7 @@ dependencies {
     implementation("com.amazonaws:aws-lambda-java-serialization:${property("awsLambdaJavaSerialization")}")
 //    developmentOnly("org.springframework.boot:spring-boot-devtools")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.amazonaws:aws-lambda-java-tests:1.1.1")
 }
 
 dependencyManagement {
