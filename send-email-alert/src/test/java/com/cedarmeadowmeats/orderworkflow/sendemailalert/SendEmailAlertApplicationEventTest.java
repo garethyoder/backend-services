@@ -29,7 +29,7 @@ import software.amazon.awssdk.services.sesv2.model.SendEmailResponse;
 
 @ExtendWith(SpringExtension.class)
 @FunctionalSpringBootTest
-class SendEmailAlertApplicationFunctionCatalogTests {
+class SendEmailAlertApplicationEventTest {
 
     @Autowired
     private SendEmailAlertApplication application;

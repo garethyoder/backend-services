@@ -1,0 +1,11 @@
+spring:
+  main:
+    web-application-type: servlet
+send-email-confirmation:
+  email:
+    sender: Gareth Yoder <gyoder@cedarmeadowmeats.com>
+    no-reply-sender: noReply <noReply@cedarmeadowmeats.com>
+    admin-emails: >
+      Gareth Yoder <gyoder@cedarmeadowmeats.com>,
+      Joy Yoder <jyoder@cedarmeadowmeats.com>
+    confirmationToClientEmail: src/main/resources/templates/email/confirmationEmail/confirmationToClientEmail.html

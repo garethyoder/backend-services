@@ -6,7 +6,7 @@ s3_prefix = "order-workflow-test"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=test"
+parameter_overrides = "Environment=\"test\""
 image_repositories = []
 
 [test.deploy.parameters]

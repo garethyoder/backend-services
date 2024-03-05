@@ -16,12 +16,23 @@ repositories {
 }
 
 extra["springCloudVersion"] = "2023.0.0"
+extra["awsSdkBom"] = "2.23.7"
+extra["awsLambdaJavaCore"] = "1.2.3"
+extra["awsLambdaJavaEvents"] = "3.11.4"
+extra["awsLambdaJavaSerialization"] = "1.1.5"
+extra["awsLambdaJavaTests"] = "1.1.1"
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.cloud:spring-cloud-function-context")
+    developmentOnly("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.cloud:spring-cloud-starter-function-web")
+    implementation("org.springframework.cloud:spring-cloud-function-adapter-aws")
+    implementation("com.amazonaws:aws-lambda-java-core:${property("awsLambdaJavaCore")}")
+    implementation("com.amazonaws:aws-lambda-java-events:${property("awsLambdaJavaEvents")}")
+    implementation("com.amazonaws:aws-lambda-java-serialization:${property("awsLambdaJavaSerialization")}")
+    implementation("com.squareup:square:37.0.0.20240118")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.amazonaws:aws-lambda-java-tests:${property("awsLambdaJavaTests")}")
 }
 
 dependencyManagement {

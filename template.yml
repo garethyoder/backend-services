@@ -50,7 +50,7 @@ Resources:
       MemorySize: 1512
       Policies:
         - AWSLambdaBasicExecutionRole
-        - SESCrudPolicy
+        - AmazonSESFullAccess
       Timeout: 60
       Environment:
         Variables:
@@ -75,7 +75,7 @@ Resources:
       MemorySize: 1512
       Policies:
         - AWSLambdaBasicExecutionRole
-        - SESCrudPolicy
+        - AmazonSESFullAccess
       Timeout: 60
       Environment:
         Variables:
@@ -91,14 +91,14 @@ Resources:
   EnrichmentLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Join ['/', ['stepfunctions', StateMachine]]
+      LogGroupName: !Join ['/', ['stepfunctions', 'order-workflow-state-machine', !Ref Environment]]
 
   # OrderWorkflowStateMachine Step Functions
   OrderWorkflowStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
       Type: STANDARD
-      Name: OrderWorkflowStateMachine
+      Name: !Sub 'order-workflow-state-machine-${Environment}'
       DefinitionUri: stepfunction.asl.json
       Role: !GetAtt OrderWorkflowStateMachineRole.Arn
       Logging:
@@ -209,7 +209,7 @@ Resources:
       SourceParameters:
         FilterCriteria:
           Filters:
-            - Pattern: '{ "eventName": ["INSERT"], "dynamodb": { "NewImage": "email": { "S": [{ "exists": true }] }, "lastUpdatedDate": { "S": [{ "exists": true }] } } } }'
+            - Pattern: '{ "eventName": ["INSERT"], "dynamodb": { "NewImage": { "email": { "S": [{ "exists": true }] }, "lastUpdatedDate": { "S": [{ "exists": true }] } } } }'
         DynamoDBStreamParameters:
           StartingPosition: LATEST
           BatchSize: 1

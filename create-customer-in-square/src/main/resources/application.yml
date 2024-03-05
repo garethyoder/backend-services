@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: create-customer-in-square
+create-customer-in-square:
+  square:
+    access-token: ${SQUARE_SANDBOX_ACCESS_KEY}
+    environment: sandbox
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+create-customer-in-square:
+  square:
+    environment: production

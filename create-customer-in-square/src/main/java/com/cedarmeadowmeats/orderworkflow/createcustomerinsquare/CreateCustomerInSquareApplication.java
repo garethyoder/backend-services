@@ -1,12 +1,14 @@
-package com.cedarmeadowmeats.orderworkflow.sendemailconfirmation;
+package com.cedarmeadowmeats.orderworkflow.createcustomerinsquare;
 
 import com.amazonaws.services.lambda.runtime.events.DynamodbEvent;
 import com.amazonaws.services.lambda.runtime.events.models.dynamodb.AttributeValue;
-import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.model.FormEnum;
-import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.model.OrderFormSelectionEnum;
-import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.model.OrganizationIdEnum;
-import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.model.Submission;
-import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.service.EmailService;
+import com.cedarmeadowmeats.orderworkflow.createcustomerinsquare.model.FormEnum;
+import com.cedarmeadowmeats.orderworkflow.createcustomerinsquare.model.OrderFormSelectionEnum;
+import com.cedarmeadowmeats.orderworkflow.createcustomerinsquare.model.OrganizationIdEnum;
+import com.cedarmeadowmeats.orderworkflow.createcustomerinsquare.model.Submission;
+import com.cedarmeadowmeats.orderworkflow.createcustomerinsquare.service.SquareService;
+import com.squareup.square.exceptions.ApiException;
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -16,25 +18,24 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import software.amazon.awssdk.services.sesv2.model.SendEmailResponse;
 
 @SpringBootApplication
-public class SendEmailConfirmationApplication {
+public class CreateCustomerInSquareApplication {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private EmailService emailService;
+    private SquareService squareService;
 
-    public SendEmailConfirmationApplication(EmailService emailService) {
-        this.emailService = emailService;
+    public CreateCustomerInSquareApplication(SquareService squareService) {
+        this.squareService = squareService;
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(SendEmailConfirmationApplication.class, args);
+        SpringApplication.run(CreateCustomerInSquareApplication.class, args);
     }
 
     @Bean
-    public Function<List<DynamodbEvent.DynamodbStreamRecord>, String> sendEmailConfirmation() {
+    public Function<List<DynamodbEvent.DynamodbStreamRecord>, String> sendEmailAlert() {
         return value -> {
             LOGGER.info("Printing Event:\n {}", value);
             value.forEach(r -> {
@@ -63,8 +64,13 @@ public class SendEmailConfirmationApplication {
                     Integer.valueOf(r.getDynamodb().getNewImage().get("version").getN())
                 );
 
-                SendEmailResponse response = emailService.sendEmailConfirmationToClient(submission);
-                LOGGER.info("Email sent successfully: {}", response.toString());
+                submission.setIdempotencyKey(r.getEventID());
+
+              try {
+                squareService.clientSubmission(submission);
+              } catch (IOException | ApiException e) {
+                throw new RuntimeException(e);
+              }
             });
 
             return "Success";

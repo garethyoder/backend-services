@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: send-email-confirmation
+send-email-confirmation:
+  email:
+    sender: Gareth Yoder <gyoder@cedarmeadowmeats.com>
+    no-reply-sender: noReply <noReply@cedarmeadowmeats.com>
+    admin-emails: >
+      Gareth Yoder <gyoder@cedarmeadowmeats.com>,
+      Joy Yoder <jyoder@cedarmeadowmeats.com>
+    defaultAlertEmail: templates/email/confirmationEmail/defaultAlertEmail.html
+    orderFormAlertEmail: templates/email/confirmationEmail/orderFormAlertEmail.html
+---
+spring:
+  config:
+    activate:
+      on-profile: tc
+send-email-confirmation:
+  email:
+    defaultAlertEmail: src/main/resources/templates/email/confirmationEmail/defaultAlertEmail.html
+    orderFormAlertEmail: src/main/resources/templates/email/confirmationEmail/orderFormAlertEmail.html
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  main:
+    web-application-type: servlet
+send-email-confirmation:
+  email:
+    defaultAlertEmail: src/main/resources/templates/email/confirmationEmail/defaultAlertEmail.html
+    orderFormAlertEmail: src/main/resources/templates/email/confirmationEmail/orderFormAlertEmail.html
