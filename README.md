@@ -11,3 +11,6 @@ To deploy SAM for test:
 
 To deploy SAM for test:
 `sam deploy --config-env prod`
+
+To test a single lambda function:
+`sam local invoke --event 'test.txt' SendEmailAlertFunction`

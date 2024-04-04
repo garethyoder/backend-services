@@ -1,6 +1,9 @@
 spring:
   main:
     web-application-type: servlet
+  cloud:
+    function:
+      definition: sendEmailConfirmation
 send-email-confirmation:
   email:
     sender: Gareth Yoder <gyoder@cedarmeadowmeats.com>

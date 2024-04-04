@@ -2,6 +2,12 @@
 POST http://localhost:8080/sendEmailAlert
 Content-Type: application/json
 
+"Test"
+
+### Generic Form Submission
+POST http://localhost:8080/sendEmailAlert
+Content-Type: application/json
+
 [
   {
     "eventID": "ec1805c55c0e3954e1512f1e00473b16",

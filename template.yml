@@ -2,6 +2,13 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: DynamoDB order-table creation, EventBridge Pipe that streams to Step functions
 
+Mappings:
+  EnvVariables:
+    test:
+      squareAccessKey: "{{resolve:ssm:/create-customer-in-square-test/SQUARE_ACCESS_KEY:1}}"
+    prod:
+      squareAccessKey: "{{resolve:ssm:/create-customer-in-square-prod/SQUARE_ACCESS_KEY:1}}"
+
 Parameters:
   Environment:
     Type: String
@@ -42,12 +49,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub 'send-email-alert-${Environment}'
-      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest
       Runtime: java21
       #      SnapStart:
       #        ApplyOn: PublishedVersions
       CodeUri: send-email-alert
-      MemorySize: 1512
+      MemorySize: 1024
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonSESFullAccess
@@ -58,6 +65,8 @@ Resources:
           eng: !Ref Environment
           SPRING_PROFILES_ACTIVE: !Ref Environment
           JAVA_TOOL_OPTIONS: !Sub '-Dspring.profiles.active=${Environment}'
+          spring_cloud_function_definition: sendEmailAlert
+          MAIN_CLASS: com.cedarmeadowmeats.orderworkflow.sendemailalert.SendEmailAlertApplication
       Tags:
         org: cedarmeadowmeats
         env: !Ref Environment
@@ -67,12 +76,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub 'send-email-confirmation-${Environment}'
-      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest
       Runtime: java21
       #      SnapStart:
       #        ApplyOn: PublishedVersions
       CodeUri: send-email-confirmation
-      MemorySize: 1512
+      MemorySize: 1024
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonSESFullAccess
@@ -83,6 +92,34 @@ Resources:
           eng: !Ref Environment
           SPRING_PROFILES_ACTIVE: !Ref Environment
           JAVA_TOOL_OPTIONS: !Sub '-Dspring.profiles.active=${Environment}'
+          MAIN_CLASS: com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.SendEmailConfirmationApplication
+      Tags:
+        org: cedarmeadowmeats
+        env: !Ref Environment
+
+  # Send Email Confirmation Function
+  CreateCustomerInSquareFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub 'create-customer-in-square-${Environment}'
+      Handler: org.springframework.cloud.function.adapter.aws.FunctionInvoker::handleRequest
+      Runtime: java21
+      #      SnapStart:
+      #        ApplyOn: PublishedVersions
+      CodeUri: create-customer-in-square
+      MemorySize: 1024
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonSESFullAccess
+      Timeout: 60
+      Environment:
+        Variables:
+          org: cedarmeadowmeats
+          eng: !Ref Environment
+          SPRING_PROFILES_ACTIVE: !Ref Environment
+          JAVA_TOOL_OPTIONS: !Sub '-Dspring.profiles.active=${Environment}'
+          MAIN_CLASS: com.cedarmeadowmeats.orderworkflow.createcustomerinsquare.CreateCustomerInSquareApplication
+          SQUARE_ACCESS_KEY: !FindInMap [EnvVariables, !Ref Environment, squareAccessKey]
       Tags:
         org: cedarmeadowmeats
         env: !Ref Environment
@@ -99,6 +136,11 @@ Resources:
     Properties:
       Type: STANDARD
       Name: !Sub 'order-workflow-state-machine-${Environment}'
+      DefinitionSubstitutions:
+        SendEmailAlertFunctionArn: !GetAtt SendEmailAlertFunction.Arn
+        SendEmailConfirmationFunctionArn: !GetAtt SendEmailConfirmationFunction.Arn
+        CreateCustomerInSquareFunctionArn: !GetAtt CreateCustomerInSquareFunction.Arn
+        Environment: !Ref Environment
       DefinitionUri: stepfunction.asl.json
       Role: !GetAtt OrderWorkflowStateMachineRole.Arn
       Logging:
@@ -145,6 +187,25 @@ Resources:
                   - 'logs:DescribeResourcePolicies'
                   - 'logs:DescribeLogGroups'
                 Resource: '*'
+        - PolicyName: LambdaExecute
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'lambda:InvokeFunction'
+                Resource:
+                  - !Sub '${SendEmailAlertFunction.Arn}:*'
+                  - !Sub '${SendEmailConfirmationFunction.Arn}:*'
+                  - !Sub '${CreateCustomerInSquareFunction.Arn}:*'
+        - PolicyName: StepFunctionSESv2Execute
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - ses:SendEmail
+                Effect: Allow
+                Resource: '*'
 
   # Role + Permissions for Pipes
   PipeRole:
@@ -186,6 +247,7 @@ Resources:
                 Resource:
                   - !GetAtt SendEmailAlertFunction.Arn
                   - !GetAtt SendEmailConfirmationFunction.Arn
+                  - !GetAtt CreateCustomerInSquareFunction.Arn
         - PolicyName: EnrichmentPolicy
           PolicyDocument:
             Version: 2012-10-17

@@ -1,9 +1,12 @@
 spring:
   application:
     name: create-customer-in-square
+  cloud:
+    function:
+      definition: createCustomerInSquare
 create-customer-in-square:
   square:
-    access-token: ${SQUARE_SANDBOX_ACCESS_KEY}
+    access-token: ${SQUARE_ACCESS_KEY}
     environment: sandbox
 ---
 spring:

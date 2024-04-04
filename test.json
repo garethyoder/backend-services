@@ -1,0 +1,53 @@
+[
+  {
+    "eventID": "8817fca4106aece571d310e28622506c",
+    "eventName": "INSERT",
+    "eventVersion": "1.1",
+    "eventSource": "aws:dynamodb",
+    "awsRegion": "us-east-1",
+    "dynamodb": {
+      "ApproximateCreationDateTime": 1712111937,
+      "Keys": {
+        "lastUpdatedDate": {
+          "S": "2024-04-03T02:38:56.578981587Z[UTC]"
+        },
+        "email": {
+          "S": "garethyoder@yahoo.com"
+        }
+      },
+      "NewImage": {
+        "organizationId": {
+          "S": "CEDAR_MEADOW_MEATS"
+        },
+        "lastUpdatedDate": {
+          "S": "2024-04-03T02:38:56.578981587Z[UTC]"
+        },
+        "comments": {
+          "S": "testing"
+        },
+        "createdDate": {
+          "S": "2024-04-03T02:38:56.578957690Z[UTC]"
+        },
+        "form": {
+          "S": "CONTACT_FORM"
+        },
+        "phone": {
+          "S": "717-368-2610"
+        },
+        "name": {
+          "S": "Gareth R Yoder"
+        },
+        "version": {
+          "N": "0"
+        },
+        "email": {
+          "S": "garethyoder@yahoo.com"
+        }
+      },
+      "SequenceNumber": "138010200000000038741215828",
+      "SizeBytes": 304,
+      "StreamViewType": "NEW_AND_OLD_IMAGES"
+    },
+    "eventSourceARN": "arn:aws:dynamodb:us-east-1:295995521946:table/OrderTable-test/stream/2024-03-05T02:10:45.077"
+  }
+]

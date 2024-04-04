@@ -1,9 +1,6 @@
 package com.cedarmeadowmeats.orderworkflow.createcustomerinsquare.service;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -22,16 +19,19 @@ import com.squareup.square.models.Customer;
 import com.squareup.square.models.SearchCustomersRequest;
 import com.squareup.square.models.SearchCustomersResponse;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class SquareServiceTest {
 
   private Submission submission;
@@ -63,22 +63,17 @@ class SquareServiceTest {
     SearchCustomersResponse customersResponse = mock(SearchCustomersResponse.class);
 
     CustomersApi mockCustomersApi = mock(DefaultCustomersApi.class);
-    doReturn(customersResponse).when(mockCustomersApi).searchCustomers(searchCustomersRequestArgumentCaptor.capture());
+    when(customersResponse.getCustomers()).thenReturn(List.of(new Customer.Builder().build()));
+    when(mockCustomersApi.searchCustomers(searchCustomersRequestArgumentCaptor.capture())).thenReturn(customersResponse);
     when(squareClient.getCustomersApi()).thenReturn(mockCustomersApi);
 
     squareService.clientSubmission(submission);
 
-    Assertions.assertEquals(submission.getEmail(), searchCustomersRequestArgumentCaptor.getValue().getQuery().toString());
-    Assertions.assertEquals(submission.getPhone(), createCustomerRequestArgumentCaptor.getValue().getPhoneNumber());
-    Assertions.assertEquals("Jane", createCustomerRequestArgumentCaptor.getValue().getGivenName());
-    Assertions.assertEquals("Doe", createCustomerRequestArgumentCaptor.getValue().getFamilyName());
-    Assertions.assertEquals(submission.getIdempotencyKey(), createCustomerRequestArgumentCaptor.getValue().getIdempotencyKey());
-
     // assert Square search query contains email
-    assertThat("Search query must contain email.", searchCustomersRequestArgumentCaptor.getValue().getQuery().toString(), containsString(submission.getEmail()));
+    MatcherAssert.assertThat("Search query must contain email.", searchCustomersRequestArgumentCaptor.getValue().getQuery().toString(), containsString("client@test.com"));
 
-    verify(mockCustomersApi.searchCustomers(any()), times(1));
-    verify(mockCustomersApi.createCustomer(any()), times(0));
+    verify(mockCustomersApi, times(1)).searchCustomers(any());
+    verify(mockCustomersApi, times(0)).createCustomer(any());
   }
 
   @Test
@@ -90,7 +85,7 @@ class SquareServiceTest {
 
     // Search Customers Mock
     when(customersResponse.getCustomers()).thenReturn(null);
-    doReturn(customersResponse).when(mockCustomersApi).searchCustomers(searchCustomersRequestArgumentCaptor.capture());
+    when(mockCustomersApi.searchCustomers(searchCustomersRequestArgumentCaptor.capture())).thenReturn(customersResponse);
 
     // Create Customer Mock
     CreateCustomerResponse createCustomerResponse = mock(CreateCustomerResponse.class);
@@ -105,8 +100,8 @@ class SquareServiceTest {
     Assertions.assertEquals("Doe", createCustomerRequestArgumentCaptor.getValue().getFamilyName());
     Assertions.assertEquals(submission.getIdempotencyKey(), createCustomerRequestArgumentCaptor.getValue().getIdempotencyKey());
 
-    verify(mockCustomersApi.searchCustomers(any()), times(1));
-    verify(mockCustomersApi.createCustomer(any()), times(1));
+    verify(mockCustomersApi, times(1)).searchCustomers(any());
+    verify(mockCustomersApi, times(1)).createCustomer(any());
   }
 
 }

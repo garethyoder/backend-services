@@ -1,6 +1,9 @@
 spring:
   application:
     name: send-email-confirmation
+  cloud:
+    function:
+      definition: sendEmailConfirmation
 send-email-confirmation:
   email:
     sender: Gareth Yoder <gyoder@cedarmeadowmeats.com>
@@ -10,6 +13,7 @@ send-email-confirmation:
       Joy Yoder <jyoder@cedarmeadowmeats.com>
     defaultAlertEmail: templates/email/confirmationEmail/defaultAlertEmail.html
     orderFormAlertEmail: templates/email/confirmationEmail/orderFormAlertEmail.html
+    confirmationToClientEmail: templates/email/confirmationEmail/confirmationToClientEmail.html
 ---
 spring:
   config:
@@ -19,6 +23,7 @@ send-email-confirmation:
   email:
     defaultAlertEmail: src/main/resources/templates/email/confirmationEmail/defaultAlertEmail.html
     orderFormAlertEmail: src/main/resources/templates/email/confirmationEmail/orderFormAlertEmail.html
+    confirmationToClientEmail: src/main/resources/templates/email/confirmationEmail/confirmationToClientEmail.html
 ---
 spring:
   config:
@@ -30,3 +35,4 @@ send-email-confirmation:
   email:
     defaultAlertEmail: src/main/resources/templates/email/confirmationEmail/defaultAlertEmail.html
     orderFormAlertEmail: src/main/resources/templates/email/confirmationEmail/orderFormAlertEmail.html
+    confirmationToClientEmail: src/main/resources/templates/email/confirmationEmail/confirmationToClientEmail.html

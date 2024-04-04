@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.2.2"
+    id("org.springframework.boot") version "3.2.4"
     id("io.spring.dependency-management") version "1.1.4"
 }
 
@@ -15,7 +15,7 @@ repositories {
     mavenCentral()
 }
 
-extra["springCloudVersion"] = "2023.0.0"
+extra["springCloudVersion"] = "2023.0.1"
 extra["awsSdkBom"] = "2.23.7"
 extra["awsLambdaJavaCore"] = "1.2.3"
 extra["awsLambdaJavaEvents"] = "3.11.4"
@@ -29,7 +29,7 @@ dependencies {
     implementation("com.amazonaws:aws-lambda-java-core:${property("awsLambdaJavaCore")}")
     implementation("com.amazonaws:aws-lambda-java-events:${property("awsLambdaJavaEvents")}")
     implementation("com.amazonaws:aws-lambda-java-serialization:${property("awsLambdaJavaSerialization")}")
-    implementation("com.squareup:square:37.0.0.20240118")
+    implementation("com.squareup:square:38.1.0.20240320")
     developmentOnly("org.springframework.boot:spring-boot-devtools")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("com.amazonaws:aws-lambda-java-tests:${property("awsLambdaJavaTests")}")

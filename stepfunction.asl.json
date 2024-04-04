@@ -1,11 +1,130 @@
 {
   "Comment": "A description of my state machine",
-  "StartAt": "Wait",
+  "StartAt": "SendEmailAlert",
   "States": {
-    "Wait": {
-      "Type": "Wait",
-      "Seconds": 30,
+    "SendEmailAlert": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SendEmailAlertFunctionArn}:$LATEST",
+        "InvocationType": "Event",
+        "Payload.$": "$"
+      },
+      "ResultPath" : null,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "SendEmail"
+        }
+      ],
+      "Next": "SendEmailConfirmation"
+    },
+    "SendEmailConfirmation": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${SendEmailConfirmationFunctionArn}:$LATEST",
+        "InvocationType": "Event",
+        "Payload.$": "$"
+      },
+      "ResultPath" : null,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "SendEmail"
+        }
+      ],
+      "Next": "CreateCustomerInSquare"
+    },
+    "CreateCustomerInSquare": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "${CreateCustomerInSquareFunctionArn}:$LATEST",
+        "InvocationType": "Event",
+        "Payload.$": "$"
+      },
+      "ResultPath" : null,
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2
+        }
+      ],
+      "Catch": [
+        {
+          "ErrorEquals": [
+            "States.ALL"
+          ],
+          "Next": "SendEmail"
+        }
+      ],
       "Next": "Success"
+    },
+    "SendEmail": {
+      "Type": "Task",
+      "Next": "Fail",
+      "Parameters": {
+        "Content": {
+          "Simple": {
+            "Body": {
+              "Text": {
+                "Data": "Please investigate the error in the ${Environment} Step function."
+              }
+            },
+            "Subject": {
+              "Data": "Error on Step function"
+            }
+          }
+        },
+        "FromEmailAddress": "noReply@cedarmeadowmeats.com",
+        "Destination": {
+          "ToAddresses": [
+            "gyoder@cedarmeadowmeats.com"
+          ]
+        }
+      },
+      "Resource": "arn:aws:states:::aws-sdk:sesv2:sendEmail"
+    },
+    "Fail": {
+      "Type": "Fail"
     },
     "Success": {
       "Type": "Succeed",

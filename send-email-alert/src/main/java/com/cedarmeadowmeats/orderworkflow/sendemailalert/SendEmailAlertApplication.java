@@ -9,8 +9,6 @@ import com.cedarmeadowmeats.orderworkflow.sendemailalert.model.Submission;
 import com.cedarmeadowmeats.orderworkflow.sendemailalert.service.EmailService;
 import java.lang.invoke.MethodHandles;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -23,7 +21,7 @@ import software.amazon.awssdk.services.sesv2.model.SendEmailResponse;
 @SpringBootApplication
 public class SendEmailAlertApplication {
 
-    private EmailService emailService;
+    private final EmailService emailService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -34,7 +32,7 @@ public class SendEmailAlertApplication {
   public static void main(String[] args) {
         SpringApplication.run(SendEmailAlertApplication.class, args);
         LOGGER.info("Application started");
-    }
+  }
 
     @Bean
     public Function<List<DynamodbEvent.DynamodbStreamRecord>, String> sendEmailAlert() {

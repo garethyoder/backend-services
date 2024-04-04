@@ -24,7 +24,7 @@ public class CreateCustomerInSquareApplication {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private SquareService squareService;
+    private final SquareService squareService;
 
     public CreateCustomerInSquareApplication(SquareService squareService) {
         this.squareService = squareService;
@@ -35,7 +35,7 @@ public class CreateCustomerInSquareApplication {
     }
 
     @Bean
-    public Function<List<DynamodbEvent.DynamodbStreamRecord>, String> sendEmailAlert() {
+    public Function<List<DynamodbEvent.DynamodbStreamRecord>, String> createCustomerInSquare() {
         return value -> {
             LOGGER.info("Printing Event:\n {}", value);
             value.forEach(r -> {

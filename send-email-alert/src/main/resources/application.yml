@@ -1,6 +1,9 @@
 spring:
   application:
     name: send-email-alert
+  cloud:
+    function:
+      definition: sendEmailAlert
 send-email-alert:
   email:
     sender: Gareth Yoder <gyoder@cedarmeadowmeats.com>

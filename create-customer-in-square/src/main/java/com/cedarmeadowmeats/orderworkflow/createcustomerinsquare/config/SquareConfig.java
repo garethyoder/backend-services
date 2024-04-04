@@ -2,10 +2,10 @@ package com.cedarmeadowmeats.orderworkflow.createcustomerinsquare.config;
 
 import com.squareup.square.Environment;
 import com.squareup.square.SquareClient;
+import com.squareup.square.authentication.BearerAuthModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class SquareConfig {
@@ -30,7 +30,7 @@ public class SquareConfig {
 
         return new SquareClient.Builder()
                 .environment(squareEnvironment)
-                .accessToken(squareAccessKey)
+                .bearerAuthCredentials((new BearerAuthModel.Builder(squareAccessKey)).build())
                 .build();
     }
 }
