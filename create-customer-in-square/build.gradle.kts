@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.3.2"
+    id("org.springframework.boot") version "3.3.4"
     id("io.spring.dependency-management") version "1.1.6"
 }
 
@@ -15,8 +15,8 @@ repositories {
     mavenCentral()
 }
 
-extra["springCloudVersion"] = "2023.0.1"
-extra["awsSdkBom"] = "2.26.25"
+extra["springCloudVersion"] = "2023.0.3"
+extra["awsSdkBom"] = "2.28.26"
 extra["awsLambdaJavaCore"] = "1.2.3"
 extra["awsLambdaJavaEvents"] = "3.11.4"
 extra["awsLambdaJavaSerialization"] = "1.1.5"

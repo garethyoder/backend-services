@@ -3,6 +3,8 @@ package com.cedarmeadowmeats.orderworkflow.sendemailalert.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public enum OrderFormSelectionEnum {
+    @JsonProperty("eighth-steer")
+    EIGHTH_STEER("eighth-steer"),
     @JsonProperty("quarter-steer")
     QUARTER_STEER("quarter-steer"),
     @JsonProperty("half-steer")

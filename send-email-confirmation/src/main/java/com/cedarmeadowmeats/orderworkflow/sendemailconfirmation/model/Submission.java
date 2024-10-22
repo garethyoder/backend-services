@@ -8,6 +8,9 @@ public class Submission {
     private String email;
     private String phone;
     private String comments;
+    private String referral;
+    private String date;
+    private String venue;
     private FormEnum form;
     private OrderFormSelectionEnum orderFormSelectionEnum;
     private OrganizationIdEnum organizationId;
@@ -65,6 +68,30 @@ public class Submission {
 
     public void setComments(String comments) {
         this.comments = comments;
+    }
+
+    public String getReferral() {
+        return referral;
+    }
+
+    public void setReferral(String referral) {
+        this.referral = referral;
+    }
+
+    public String getDate() {
+        return date;
+    }
+
+    public void setDate(String date) {
+        this.date = date;
+    }
+
+    public String getVenue() {
+        return venue;
+    }
+
+    public void setVenue(String venue) {
+        this.venue = venue;
     }
 
     public FormEnum getForm() {

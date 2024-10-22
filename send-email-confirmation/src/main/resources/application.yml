@@ -14,6 +14,10 @@ send-email-confirmation:
     defaultAlertEmail: templates/email/confirmationEmail/defaultAlertEmail.html
     orderFormAlertEmail: templates/email/confirmationEmail/orderFormAlertEmail.html
     confirmationToClientEmail: templates/email/confirmationEmail/confirmationToClientEmail.html
+  dj-email:
+    sender: Gareth Yoder <gyoder@gyoderaudioexpressions.com>
+    no-reply-sender: noReply <noReply@gyoderaudioexpressions.com>
+    admin-emails: Gareth Yoder <garethyoder@yahoo.com>
 ---
 spring:
   config:
@@ -24,6 +28,8 @@ send-email-confirmation:
     defaultAlertEmail: src/main/resources/templates/email/confirmationEmail/defaultAlertEmail.html
     orderFormAlertEmail: src/main/resources/templates/email/confirmationEmail/orderFormAlertEmail.html
     confirmationToClientEmail: src/main/resources/templates/email/confirmationEmail/confirmationToClientEmail.html
+  dj-email:
+    defaultAlertEmail: src/main/resources/templates/email/alertEmail/djFormAlertEmail.html
 ---
 spring:
   config:
@@ -36,3 +42,5 @@ send-email-confirmation:
     defaultAlertEmail: src/main/resources/templates/email/confirmationEmail/defaultAlertEmail.html
     orderFormAlertEmail: src/main/resources/templates/email/confirmationEmail/orderFormAlertEmail.html
     confirmationToClientEmail: src/main/resources/templates/email/confirmationEmail/confirmationToClientEmail.html
+  dj-email:
+    defaultAlertEmail: src/main/resources/templates/email/alertEmail/djFormAlertEmail.html
