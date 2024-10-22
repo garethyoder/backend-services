@@ -2,8 +2,6 @@ package com.cedarmeadowmeats.orderworkflow.sendemailconfirmation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -80,6 +78,25 @@ public class SendEmailConfirmationApplicationEventTest {
     Assertions.assertEquals("Gareth Yoder <gyoder@cedarmeadowmeats.com>", confirmationEmail.replyToAddresses().getFirst(), "Verify the reply to is the admin.");
     Assertions.assertEquals("Thank you for contacting Cedar Meadow Naturals", confirmationEmail.content().simple().subject().data(), "Verify the email subject line.");
     MatcherAssert.assertThat("Confirmation email body.", confirmationEmail.content().simple().body().toString(), containsString("Thank you for reaching out to Cedar Meadow Naturals.  We typically respond in 1-2 business days."));
+
+  }
+
+  @ParameterizedTest
+  @Event(value = "dynamodb/dj_form_event.json", type = DynamodbEvent.DynamodbStreamRecord.class)
+  public void testDJContactFormEvent(DynamodbEvent.DynamodbStreamRecord event) {
+    assertThat(event).isNotNull();
+    Assertions.assertEquals("Success", application.sendEmailConfirmation().apply(List.of(event)));
+
+    verify(sesV2Client, times(1)).sendEmail(any(SendEmailRequest.class));
+
+    SendEmailRequest confirmationEmail = sendEmailRequestArgumentCaptor.getAllValues().getFirst();
+
+    // Confirmation Email Assertions
+    Assertions.assertEquals("client@test.com", confirmationEmail.destination().toAddresses().getFirst(), "Verify the destination email is the client.");
+    Assertions.assertEquals("Gareth Yoder <gyoder@gyoderaudioexpressions.com>", confirmationEmail.fromEmailAddress(), "Verify the sender email is the admin.");
+    Assertions.assertEquals("Gareth Yoder <gyoder@gyoderaudioexpressions.com>", confirmationEmail.replyToAddresses().getFirst(), "Verify the reply to is the admin.");
+    Assertions.assertEquals("Thank you for contacting G Yoder Audio Expressions", confirmationEmail.content().simple().subject().data(), "Verify the email subject line.");
+    MatcherAssert.assertThat("Confirmation email body.", confirmationEmail.content().simple().body().toString(), containsString("Thank you for reaching out to G Yoder Audio Expressions.  We typically respond in 1-2 business days."));
 
   }
 }

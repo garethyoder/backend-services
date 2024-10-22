@@ -14,3 +14,8 @@ send-email-alert:
     defaultAlertEmail: src/main/resources/templates/email/alertEmail/defaultAlertEmail.html
     orderFormAlertEmail: src/main/resources/templates/email/alertEmail/orderFormAlertEmail.html
     confirmationToClientEmail: src/main/resources/templates/email/confirmationEmail/confirmationToClientEmail.html
+  dj-email:
+    sender: Gareth Yoder <gyoder@gyoderaudioexpressions.com>
+    no-reply-sender: noReply <noReply@gyoderaudioexpressions.com>
+    admin-emails: Gareth Yoder <garethyoder@yahoo.com>
+    defaultAlertEmail: src/main/resources/templates/email/alertEmail/djFormAlertEmail.html

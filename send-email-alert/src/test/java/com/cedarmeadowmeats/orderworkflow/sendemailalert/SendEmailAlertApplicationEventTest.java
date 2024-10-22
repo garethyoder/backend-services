@@ -66,6 +66,45 @@ class SendEmailAlertApplicationEventTest {
         MatcherAssert.assertThat("Alert email must contain client's email.", alertEmail.content().simple().body().toString(), containsString("client@test.com"));
         MatcherAssert.assertThat("Alert email must contain selection.", alertEmail.content().simple().body().toString(), containsString("Selection"));
         MatcherAssert.assertThat("Alert email must contain comments.", alertEmail.content().simple().body().toString(), containsString("This is a test comment"));
+        MatcherAssert.assertThat("Alert email must hide referral.", alertEmail.content().simple().body().toString(), containsString(
+            "<tr style=\"display: none\"><td>Referral</td><td></td></tr>"));
+    }
+
+    @ParameterizedTest
+    @Event(value = "dynamodb/order_form_event_with_referral.json", type = DynamodbEvent.DynamodbStreamRecord.class)
+    public void testOrderFormEventWithReferral(DynamodbEvent.DynamodbStreamRecord event) {
+        assertThat(event).isNotNull();
+        Assertions.assertEquals("Success", application.sendEmailAlert().apply(List.of(event)));
+
+        verify(sesV2Client, times(1)).sendEmail(any(SendEmailRequest.class));
+
+        SendEmailRequest alertEmail = sendEmailRequestArgumentCaptor.getAllValues().getFirst();
+
+        // Alert Email Assertions
+        MatcherAssert.assertThat(alertEmail.destination().toAddresses(),
+            hasItems("Gareth Yoder <gyoder@cedarmeadowmeats.com>"));
+        MatcherAssert.assertThat(alertEmail.destination().toAddresses(),
+            hasItems("Joy Yoder <jyoder@cedarmeadowmeats.com>"));
+        Assertions.assertEquals("noReply <noReply@cedarmeadowmeats.com>",
+            alertEmail.fromEmailAddress(), "Verify the \"noReply\" from sender email.");
+        Assertions.assertEquals("client@test.com", alertEmail.replyToAddresses().getFirst(),
+            "Verify the reply to is the client email.");
+        Assertions.assertEquals("Cedar Meadow Meats Order Form: John Doe",
+            alertEmail.content().simple().subject().data(), "Verify the email subject line.");
+        MatcherAssert.assertThat("Alert email must contain client's name.",
+            alertEmail.content().simple().body().toString(), containsString("John Doe"));
+        MatcherAssert.assertThat("Alert email must contain client's phone.",
+            alertEmail.content().simple().body().toString(), containsString("123-456-7890"));
+        MatcherAssert.assertThat("Alert email must contain client's email.",
+            alertEmail.content().simple().body().toString(), containsString("client@test.com"));
+        MatcherAssert.assertThat("Alert email must contain selection.",
+            alertEmail.content().simple().body().toString(), containsString("Selection"));
+        MatcherAssert.assertThat("Alert email must contain comments.",
+            alertEmail.content().simple().body().toString(),
+            containsString("This is a test comment"));
+        MatcherAssert.assertThat("Alert email show hide referral.",
+            alertEmail.content().simple().body().toString(), containsString(
+                "<tr style=\"display: block\"><td>Referral</td><td>Jane Doe</td></tr>"));
     }
 
     @ParameterizedTest
@@ -89,6 +128,30 @@ class SendEmailAlertApplicationEventTest {
         MatcherAssert.assertThat("Alert email must contain client's email.", alertEmail.content().simple().body().toString(), containsString("client@test.com"));
         MatcherAssert.assertThat("Alert email must not contain selection (another form).", alertEmail.content().simple().body().toString(), not(containsString("selection")));
         MatcherAssert.assertThat("Alert email must contain comments.", alertEmail.content().simple().body().toString(), containsString("This is a test comment"));
+    }
+
+    @ParameterizedTest
+    @Event(value = "dynamodb/dj_form_event.json", type = DynamodbEvent.DynamodbStreamRecord.class)
+    public void testDjFormEvent(DynamodbEvent.DynamodbStreamRecord event) {
+        assertThat(event).isNotNull();
+        Assertions.assertEquals("Success", application.sendEmailAlert().apply(List.of(event)));
+
+        verify(sesV2Client, times(1)).sendEmail(any(SendEmailRequest.class));
+
+        SendEmailRequest alertEmail = sendEmailRequestArgumentCaptor.getAllValues().getFirst();
+
+        // Alert Email Assertions
+        MatcherAssert.assertThat(alertEmail.destination().toAddresses(), hasItems("Gareth Yoder <garethyoder@yahoo.com>"));
+        Assertions.assertEquals("noReply <noReply@gyoderaudioexpressions.com>", alertEmail.fromEmailAddress(), "Verify the \"noReply\" from sender email.");
+        Assertions.assertEquals("client@test.com", alertEmail.replyToAddresses().getFirst(), "Verify the reply to is the client email.");
+        Assertions.assertEquals("G Yoder Audio Expressions Contact Form: John Doe", alertEmail.content().simple().subject().data(), "Verify the email subject line.");
+        MatcherAssert.assertThat("Alert email must contain client's name.", alertEmail.content().simple().body().toString(), containsString("John Doe"));
+        MatcherAssert.assertThat("Alert email must contain client's phone.", alertEmail.content().simple().body().toString(), containsString("123-456-7890"));
+        MatcherAssert.assertThat("Alert email must contain client's email.", alertEmail.content().simple().body().toString(), containsString("client@test.com"));
+        MatcherAssert.assertThat("Alert email must not contain selection (another form).", alertEmail.content().simple().body().toString(), not(containsString("selection")));
+        MatcherAssert.assertThat("Alert email must contain comments.", alertEmail.content().simple().body().toString(), containsString("This is a test comment"));
+        MatcherAssert.assertThat("Alert email must contain venue.", alertEmail.content().simple().body().toString(), containsString("My House"));
+        MatcherAssert.assertThat("Alert email must contain date.", alertEmail.content().simple().body().toString(), containsString("05-17-2024"));
     }
 
 }

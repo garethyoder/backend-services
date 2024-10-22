@@ -1,9 +1,9 @@
 package com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.service;
 
 
+import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.config.DjTemplateLocationConfig;
 import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.config.EmailTemplateLocationConfig;
 import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.model.EmailTemplate;
-import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.model.FormEnum;
 import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.model.OrganizationIdEnum;
 import com.cedarmeadowmeats.orderworkflow.sendemailconfirmation.model.Submission;
 import java.io.IOException;
@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.annotations.NotNull;
@@ -29,7 +28,7 @@ import software.amazon.awssdk.services.sesv2.model.SendEmailResponse;
 import software.amazon.awssdk.services.sesv2.model.SesV2Exception;
 
 @Service
-@EnableConfigurationProperties(EmailTemplateLocationConfig.class)
+@EnableConfigurationProperties({EmailTemplateLocationConfig.class, DjTemplateLocationConfig.class})
 public class EmailService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
@@ -38,30 +37,31 @@ public class EmailService {
 
     private final EmailTemplateLocationConfig emailTemplateLocationConfig;
 
-    @Value("${send-email-confirmation.email.sender:}")
-    String sender;
+    private final DjTemplateLocationConfig djTemplateLocationConfig;
 
-    @Value("${send-email-confirmation.email.no-reply-sender:}")
-    String noReplySender;
-
-    @Value("${send-email-confirmation.email.admin-emails:}")
-    List<String> adminEmails;
-
-    public EmailService(SesV2Client sesV2Client, EmailTemplateLocationConfig emailTemplateLocationConfig) {
+    public EmailService(SesV2Client sesV2Client,
+                        EmailTemplateLocationConfig emailTemplateLocationConfig,
+                        DjTemplateLocationConfig djTemplateLocationConfig) {
         this.sesV2Client = sesV2Client;
         this.emailTemplateLocationConfig = emailTemplateLocationConfig;
+        this.djTemplateLocationConfig = djTemplateLocationConfig;
     }
 
     public SendEmailResponse sendEmailConfirmationToClient(final Submission submission) throws SesV2Exception {
 
         EmailTemplate template = null;
+        SendEmailResponse sendEmailResponse;
         try {
             template = getCustomerConfirmationEmailTemplate(submission);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        SendEmailResponse sendEmailResponse = send(sesV2Client, sender, Collections.singletonList(submission.getEmail()), sender, template.subject(), template.body());
+        if (OrganizationIdEnum.G_YODER_AUDIO_EXPRESSIONS.equals(submission.getOrganizationId())) {
+            sendEmailResponse = send(sesV2Client, djTemplateLocationConfig.sender(), Collections.singletonList(submission.getEmail()), djTemplateLocationConfig.sender(), template.subject(), template.body());
+        } else {
+            sendEmailResponse = send(sesV2Client, emailTemplateLocationConfig.sender(), Collections.singletonList(submission.getEmail()), emailTemplateLocationConfig.sender(), template.subject(), template.body());
+        }
         LOGGER.info("Email sent successfully");
         return sendEmailResponse;
     }
